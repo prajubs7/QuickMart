@@ -2,12 +2,9 @@ package com.quickmart.service;
 
 import com.quickmart.dto.OrderResponse;
 import com.quickmart.dto.PlaceOrderRequest;
-import com.quickmart.entity.Inventory;
 import com.quickmart.entity.Order;
 import com.quickmart.entity.Product;
-import com.quickmart.exception.InsufficientStockException;
 import com.quickmart.exception.ResourceNotFoundException;
-import com.quickmart.repository.InventoryRepository;
 import com.quickmart.repository.OrderRepository;
 import com.quickmart.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +20,7 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final InventoryRepository inventoryRepository;
+    private final InventoryService inventoryService;
     private final ProductRepository productRepository;
 
     // Entry point used by the controller.
@@ -38,16 +35,8 @@ public class OrderService {
             Product product = productRepository.findById(line.productId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product " + line.productId() + " not found"));
 
-            Inventory stock = inventoryRepository.findByStoreIdAndProductId(req.storeId(), line.productId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Product " + line.productId() + " is not sold at store " + req.storeId()));
-
-            if (stock.getQuantity() < line.quantity()) {
-                throw new InsufficientStockException("Only " + stock.getQuantity() + " left of product "
-                        + line.productId() + ", requested " + line.quantity());
-            }
-            stock.setQuantity(stock.getQuantity() - line.quantity());
-            inventoryRepository.save(stock);
+            // Joins this transaction (default REQUIRED), so a later failure still rolls the stock back.
+            inventoryService.reserve(req.storeId(), line.productId(), line.quantity());
 
             order.addItem(product, line.quantity());
         }
@@ -56,7 +45,6 @@ public class OrderService {
         return OrderResponse.from(order);
         
     }
-
 
     // Order history: every order of a customer, with its items and product names.
     @Transactional(readOnly = true)
