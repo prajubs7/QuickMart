@@ -1,0 +1,35 @@
+# Shared settings for every profile. Profile files only override what differs.
+spring:
+  application:
+    name: quickmart
+
+  profiles:
+    # Running without a profile gives you dev. Prod must be selected explicitly
+    # (SPRING_PROFILES_ACTIVE=prod) so you can't start it against prod by accident.
+    default: dev
+
+  jpa:
+    # Flyway owns the schema. Hibernate only checks that entities match the tables.
+    hibernate:
+      ddl-auto: validate
+    # Close the DB session when the transaction ends, not after the HTTP response is written.
+    # Lazy-loading bugs then fail loudly in the service layer instead of hiding.
+    open-in-view: false
+
+  flyway:
+    locations: classpath:db/migration
+
+  data:
+    web:
+      pageable:
+        # Without a cap, ?size=1000000 loads the whole table into memory in one request.
+        max-page-size: 100
+
+management:
+  endpoints:
+    web:
+      # Serve Actuator from the root so health is /health (default would be /actuator/health).
+      base-path: /
+      exposure:
+        # Expose only what we need. Each extra endpoint gives away information.
+        include: health

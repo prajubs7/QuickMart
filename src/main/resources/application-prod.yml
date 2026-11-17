@@ -1,0 +1,16 @@
+# Production: no secrets in the repo. Everything comes from environment variables,
+# and startup fails if one is missing (no ":default" fallback on purpose).
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    show-sql: false
+
+management:
+  endpoint:
+    health:
+      # A load balancer only needs UP/DOWN. Don't advertise which DB you run.
+      show-details: never

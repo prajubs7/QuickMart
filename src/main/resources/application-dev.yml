@@ -1,0 +1,29 @@
+# Local development: talks to the locally installed Postgres.
+spring:
+  config:
+    # Load DB_* values from .env in the repo root. Two paths because the working directory
+    # is backend/ with ./mvnw, but the repo root when VS Code launches the app.
+    # "optional:" = no error if the file is missing (e.g. you exported the vars in your shell).
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+
+  datasource:
+    # ${NAME:default} -> uses the default when the variable is not set.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:quickmart}
+    username: ${DB_USERNAME:postgres}
+    # No default on purpose: a missing password should fail at startup, not silently connect as someone else.
+    password: ${DB_PASSWORD}
+
+  jpa:
+    # Print the SQL Hibernate runs. You'll need this to spot N+1 queries and lock issues later.
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoint:
+    health:
+      # Show DB/disk status in the health JSON. Useful locally, too revealing for prod.
+      show-details: always
