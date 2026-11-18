@@ -25,6 +25,14 @@ spring:
         # Without a cap, ?size=1000000 loads the whole table into memory in one request.
         max-page-size: 100
 
+quickmart:
+  payment-gateway:
+    # 3 s is slower than the retry script's 2 s client timeout: the client gives up,
+    # but the server keeps going and charges anyway. That gap is what creates duplicates.
+    delay-ms: 3000
+    # 20% of charges fail with 502. Set to 0.0 for a clean duplicate demo.
+    failure-rate: 0.2
+
 management:
   endpoints:
     web:

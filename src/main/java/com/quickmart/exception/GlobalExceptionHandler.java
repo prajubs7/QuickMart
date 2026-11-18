@@ -50,6 +50,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), req);
     }
 
+    // 502: the payment provider failed, not us. Clients may retry a 5xx.
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ErrorResponse> handleGateway(PaymentGatewayException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_GATEWAY, ex.getMessage(), req);
+    }
+
     // 409: the DATABASE caught a conflict our checks missed (unique index or FK violation).
     // This is the safety net for races. Two requests can both pass existsBySku() before either inserts.
     // Don't echo ex.getMessage(): it contains SQL and constraint names.
