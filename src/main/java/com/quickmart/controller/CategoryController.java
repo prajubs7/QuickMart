@@ -3,6 +3,7 @@ package com.quickmart.controller;
 import com.quickmart.dto.CategoryRequest;
 import com.quickmart.dto.CategoryResponse;
 import com.quickmart.dto.PageResponse;
+import com.quickmart.service.CatalogCacheService;
 import com.quickmart.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +19,12 @@ import org.springframework.web.bind.annotation.*;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CatalogCacheService catalogCache;
 
     // ?page=0&size=20&sort=name,asc. Spring turns the query params into a Pageable.
     @GetMapping
     public PageResponse<CategoryResponse> list(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return categoryService.list(pageable);
+        return catalogCache.listCategories(pageable);
     }
 
     @GetMapping("/{id}")

@@ -20,12 +20,23 @@ spring:
     locations: classpath:db/migration
 
   data:
+    redis:
+      # Fail fast. The default timeout is 60 s: a hung Redis would hang every catalog request
+      # instead of falling back to Postgres.
+      timeout: 500ms
+      connect-timeout: 500ms
     web:
       pageable:
         # Without a cap, ?size=1000000 loads the whole table into memory in one request.
         max-page-size: 100
 
 quickmart:
+  cache:
+    # false = every read goes to Postgres. Flip it to measure "before" vs "after".
+    enabled: true
+    # How long an entry lives before Redis deletes it. This is also the MAX time a reader
+    # can see stale data, because nothing deletes entries when a product changes (yet).
+    ttl: 10m
   payment-gateway:
     # 3 s is slower than the retry script's 2 s client timeout: the client gives up,
     # but the server keeps going and charges anyway. That gap is what creates duplicates.
@@ -40,4 +51,10 @@ management:
       base-path: /
       exposure:
         # Expose only what we need. Each extra endpoint gives away information.
-        include: health
+        # metrics: read cache hit/miss counters and request latency (dev only, see prod yml).
+        include: health, metrics
+  metrics:
+    distribution:
+      # Track p50/p95/p99 per endpoint. Averages hide the slow requests users actually notice.
+      percentiles:
+        "[http.server.requests]": 0.5, 0.95, 0.99

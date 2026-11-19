@@ -3,6 +3,7 @@ package com.quickmart.controller;
 import com.quickmart.dto.PageResponse;
 import com.quickmart.dto.ProductRequest;
 import com.quickmart.dto.ProductResponse;
+import com.quickmart.service.CatalogCacheService;
 import com.quickmart.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,17 +18,19 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
+    // Reads go through the cache. Writes go straight to ProductService.
+    private final CatalogCacheService catalogCache;
 
     // GET /api/products?categoryId=3&page=0&size=20&sort=price,desc
     @GetMapping
     public PageResponse<ProductResponse> list(@RequestParam(required = false) Long categoryId,
                                               @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return productService.list(categoryId, pageable);
+        return catalogCache.listProducts(categoryId, pageable);
     }
 
     @GetMapping("/{id}")
     public ProductResponse get(@PathVariable Long id) {
-        return productService.get(id);
+        return catalogCache.getProduct(id);
     }
 
     @PostMapping

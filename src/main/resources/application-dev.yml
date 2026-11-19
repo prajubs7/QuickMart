@@ -15,6 +15,11 @@ spring:
     # No default on purpose: a missing password should fail at startup, not silently connect as someone else.
     password: ${DB_PASSWORD}
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
     # Print the SQL Hibernate runs. You'll need this to spot N+1 queries and lock issues later.
     show-sql: true
