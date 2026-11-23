@@ -51,6 +51,16 @@ spring:
         max-page-size: 100
 
 quickmart:
+  security:
+    jwt:
+      # HS256 signing key, at least 32 bytes. No default here: prod must set JWT_SECRET or fail to start.
+      # Anyone with this value can mint an ADMIN token. Never commit a real one.
+      secret: ${JWT_SECRET}
+      issuer: quickmart
+      # Short: a stolen access token can't be revoked (stateless), so its lifetime IS the damage window.
+      access-token-ttl: 15m
+      # Long, but rotated on every use and revocable in the DB (logout, reuse detection).
+      refresh-token-ttl: 14d
   cache:
     # false = every read goes to Postgres. Flip it to measure "before" vs "after".
     enabled: true

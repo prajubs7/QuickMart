@@ -24,7 +24,24 @@ SELECT s.id, p.id, 100 FROM stores s, products p
 WHERE s.name = 'Fresh Mart Koramangala' AND p.sku = 'MILK-1L'
 ON CONFLICT DO NOTHING;
 
--- The ids you need for POST /api/orders:
+-- Logins (ADR 0001). Password for all three: Password123!  (DEMO ONLY, never in prod)
+-- The hash is BCrypt strength 12, the same as SecurityConfig.passwordEncoder.
+-- VENDOR and ADMIN can only be created like this: /api/auth/register always makes a CUSTOMER.
+INSERT INTO users (email, password_hash, role, customer_id)
+SELECT 'customer@test.test', '$2a$12$unCeC7sOQNOLglHdQOLC0ON5mJRscMIuDhg2Uf0W5LUTwNbljP/QG', 'CUSTOMER', id
+FROM customers WHERE email = 'customer@test.test'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (email, password_hash, role, vendor_id)
+SELECT 'vendor@freshmart.test', '$2a$12$unCeC7sOQNOLglHdQOLC0ON5mJRscMIuDhg2Uf0W5LUTwNbljP/QG', 'VENDOR', id
+FROM vendors WHERE email = 'vendor@freshmart.test'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (email, password_hash, role)
+VALUES ('admin@quickmart.test', '$2a$12$unCeC7sOQNOLglHdQOLC0ON5mJRscMIuDhg2Uf0W5LUTwNbljP/QG', 'ADMIN')
+ON CONFLICT DO NOTHING;
+
+-- The ids you need for POST /api/orders (customerId is no longer sent: it comes from the login token):
 SELECT (SELECT id FROM customers WHERE email = 'customer@test.test') AS customer_id,
        (SELECT id FROM stores    WHERE name  = 'Fresh Mart Koramangala') AS store_id,
        (SELECT id FROM products  WHERE sku   = 'MILK-1L') AS product_id;

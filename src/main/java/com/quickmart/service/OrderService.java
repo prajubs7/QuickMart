@@ -37,11 +37,12 @@ public class OrderService {
 
     // Entry point used by the controller.
     @Transactional
-    public OrderResponse placeOrder(PlaceOrderRequest req) {
+    // customerId comes from the access token (OrderController), never from the request body.
+    public OrderResponse placeOrder(Long customerId, PlaceOrderRequest req) {
         log.info("Placing order for customer {} at store {} ({} items)",
-                req.customerId(), req.storeId(), req.items().size());
+                customerId, req.storeId(), req.items().size());
 
-        Order order = new Order(req.customerId(), req.storeId());
+        Order order = new Order(customerId, req.storeId());
 
         for (PlaceOrderRequest.Item line : req.items()) {
             Product product = productRepository.findById(line.productId())

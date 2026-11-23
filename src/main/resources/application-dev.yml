@@ -30,6 +30,13 @@ spring:
       hibernate:
         format_sql: true
 
+quickmart:
+  security:
+    jwt:
+      # Dev-only fallback so the app starts without setup. Set JWT_SECRET in .env to override.
+      # Prod has no fallback (application.yml): a forgotten secret must fail loudly, not use this one.
+      secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+
 management:
   endpoint:
     health:

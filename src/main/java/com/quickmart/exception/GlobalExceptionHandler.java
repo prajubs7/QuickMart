@@ -8,6 +8,9 @@ import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,6 +39,33 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoRoute(NoResourceFoundException ex, HttpServletRequest req) {
         return build(HttpStatus.NOT_FOUND, "No endpoint " + req.getMethod() + " " + req.getRequestURI(), req);
+    }
+
+    // 401: bad login or bad refresh token (thrown by AuthService / RefreshTokenService).
+    // Filter-chain 401s (missing/invalid access token) never get here: see JsonSecurityErrorHandler.
+    // We only throw these with our own fixed messages, so echoing getMessage() is safe.
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthenticated(AuthenticationException ex, HttpServletRequest req) {
+        return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), req);
+    }
+
+    // 403 thrown from controller/service code (e.g. JwtClaims.customerId on a non-customer token).
+    // Without this handler the catch-all below would turn it into a 500.
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(AccessDeniedException ex, HttpServletRequest req) {
+        return build(HttpStatus.FORBIDDEN, "You don't have permission for this action", req);
+    }
+
+    // 400: a rule bean validation can't express
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+    }
+
+    // 400: a required header is missing (e.g. Idempotency-Key on POST /api/payments)
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "Missing header '" + ex.getHeaderName() + "'", req);
     }
 
     // 409: we detected the conflict ourselves (duplicate SKU, category still in use)
