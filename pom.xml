@@ -14,6 +14,13 @@
 	<name>quickmart</name>
 	<properties>
 		<java.version>17</java.version>
+		<!-- Run the JVM in UTC everywhere (app, tests, containers). The Postgres JDBC driver sends the
+		     JVM zone at connect time; a Windows machine in India sends the legacy alias "Asia/Calcutta",
+		     which postgres:17 (Debian, no tzdata-legacy) rejects. UTC also keeps logs and
+		     LocalDate math identical across laptops, CI and servers. -->
+		<jvm.timezone>-Duser.timezone=UTC</jvm.timezone>
+		<!-- Picked up by maven-surefire-plugin, so Testcontainers/integration tests connect the same way. -->
+		<argLine>${jvm.timezone}</argLine>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -32,6 +39,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<!-- KafkaTemplate (producer) + @KafkaListener (consumer). Used for the OrderPlaced event. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-kafka</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -89,6 +101,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!-- spring-boot:run forks a new JVM; it does not inherit MAVEN_OPTS. -->
+					<jvmArguments>${jvm.timezone}</jvmArguments>
+				</configuration>
 			</plugin>
 			<!-- Register Lombok as an annotation processor explicitly.
 			     Newer JDKs no longer auto-discover processors from the classpath. -->

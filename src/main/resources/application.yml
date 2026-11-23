@@ -19,6 +19,26 @@ spring:
   flyway:
     locations: classpath:db/migration
 
+  kafka:
+    producer:
+      # Key = orderId as text. Kafka sends equal keys to the same partition,
+      # and order is only guaranteed inside a partition: all events of one order stay in order.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Value = the event record as JSON (Jackson 3).
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        # By default the producer writes its Java class name (com.quickmart.dto...) into a header.
+        # Off: consumers should depend on the JSON shape, not on the producer's package names.
+        spring.json.add.type.headers: false
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      # A brand-new consumer group starts from the oldest message, not "only new ones from now".
+      auto-offset-reset: earliest
+      properties:
+        # No type header (see producer), so tell the consumer which class to build from the JSON.
+        spring.json.value.default.type: com.quickmart.dto.OrderPlacedEvent
+
   data:
     redis:
       # Fail fast. The default timeout is 60 s: a hung Redis would hang every catalog request
@@ -43,6 +63,12 @@ quickmart:
     delay-ms: 3000
     # 20% of charges fail with 502. Set to 0.0 for a clean duplicate demo.
     failure-rate: 0.2
+  email:
+    # Mock SMTP call. Slow on purpose so you can SEE whether it blocks the HTTP request.
+    delay-ms: 2000
+  notification:
+    # 30% of push notifications fail AFTER the SMS was already sent. Kafka then redelivers the event.
+    push-failure-rate: 0.3
 
 management:
   endpoints:

@@ -1,4 +1,4 @@
-# Local development: talks to the locally installed Postgres.
+# Local development: talks to the Postgres container from docker-compose.yml (host port 5433).
 spring:
   config:
     # Load DB_* values from .env in the repo root. Two paths because the working directory
@@ -10,8 +10,8 @@ spring:
 
   datasource:
     # ${NAME:default} -> uses the default when the variable is not set.
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:quickmart}
-    username: ${DB_USERNAME:postgres}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:quickmart}
+    username: ${DB_USERNAME:quickmart}
     # No default on purpose: a missing password should fail at startup, not silently connect as someone else.
     password: ${DB_PASSWORD}
 
@@ -19,6 +19,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
   jpa:
     # Print the SQL Hibernate runs. You'll need this to spot N+1 queries and lock issues later.
