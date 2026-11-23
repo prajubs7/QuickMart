@@ -38,10 +38,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
                         .requestMatchers("/health", "/health/**", "/error").permitAll()
 
+                        // Admin read access to any customer's data lives under ONE prefix (AdminController).
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Role here, OWNERSHIP in the service (ProductService / StockService):
+                        // the URL can't tell whether product 7 or store 3 belongs to this vendor.
                         .requestMatchers("/api/products/**").hasAnyRole("VENDOR", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/stores/*/inventory").hasAnyRole("VENDOR", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/stores/*/inventory/*").hasRole("VENDOR")
+
                         .requestMatchers("/api/categories/**", "/metrics/**").hasRole("ADMIN")
                         .requestMatchers("/api/payments/pay-list").hasRole("ADMIN")
-                        .requestMatchers("/api/orders/**", "/api/payments/**").hasRole("CUSTOMER")
+                        // Customer data: the services filter every query by the token's customer id.
+                        .requestMatchers("/api/orders/**", "/api/payments/**", "/api/addresses/**").hasRole("CUSTOMER")
 
                         // Default deny: a new endpoint is closed until someone opens it on purpose.
                         // The opposite (anyRequest().authenticated()) lets any logged-in user call it.

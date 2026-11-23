@@ -13,7 +13,7 @@ import java.time.Instant;
 @Table(name = "inventory")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // rows are created by SQL for now, not by Java
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Inventory {
 
     @Id
@@ -37,4 +37,11 @@ public class Inventory {
     @UpdateTimestamp
     @Column(nullable = false)
     private Instant updatedAt;
+
+    // Created when a vendor stocks a product in a store for the first time (StockService.setStock).
+    public Inventory(Long storeId, Long productId, int quantity) {
+        this.storeId = storeId;
+        this.productId = productId;
+        this.quantity = quantity;
+    }
 }

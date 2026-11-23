@@ -1,6 +1,7 @@
 package com.quickmart.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -41,6 +42,11 @@ public class Product {
     @Column(nullable = false)
     private boolean active = true;
 
+    // Owner (V11). null = platform catalog product, only ADMIN may change it.
+    // No @Setter: set once at creation, ownership never moves through a PUT body.
+    @Setter(AccessLevel.NONE)
+    private Long vendorId;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -48,4 +54,10 @@ public class Product {
     @UpdateTimestamp // Hibernate sets this on every UPDATE, so no trigger needed
     @Column(nullable = false)
     private Instant updatedAt;
+
+    public static Product ownedBy(Long vendorId) {
+        Product p = new Product();
+        p.vendorId = vendorId;
+        return p;
+    }
 }

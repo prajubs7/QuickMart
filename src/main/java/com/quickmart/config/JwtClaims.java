@@ -21,4 +21,12 @@ public final class JwtClaims {
         }
         throw new AccessDeniedException("Not a customer account");
     }
+
+    // Same rule for vendors: "which vendor am I" comes only from the signed "vid" claim.
+    public static Long vendorId(Jwt jwt) {
+        if (jwt.getClaim(VENDOR_ID) instanceof Number id) {
+            return id.longValue();
+        }
+        throw new AccessDeniedException("Not a vendor account");
+    }
 }

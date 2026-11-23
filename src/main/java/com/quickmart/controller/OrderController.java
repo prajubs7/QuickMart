@@ -32,4 +32,10 @@ public class OrderController {
     public List<OrderResponse> history(@AuthenticationPrincipal Jwt jwt) {
         return orderService.history(JwtClaims.customerId(jwt));
     }
+
+    // GET /api/orders/{id} -> one of MY orders. Another customer's id gives 404, same as a missing one.
+    @GetMapping("/{id}")
+    public OrderResponse get(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        return orderService.get(JwtClaims.customerId(jwt), id);
+    }
 }

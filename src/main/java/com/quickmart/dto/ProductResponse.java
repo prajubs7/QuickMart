@@ -11,7 +11,8 @@ public record ProductResponse(
         String description,
         BigDecimal price,
         Long categoryId,
-        boolean active
+        boolean active,
+        Long vendorId   // null = platform catalog product
 ) {
     public static ProductResponse from(Product p) {
         return new ProductResponse(
@@ -19,6 +20,7 @@ public record ProductResponse(
                 // getId() on a LAZY proxy returns the FK value without querying categories.
                 // Calling p.getCategory().getName() here instead would fire one extra query per product.
                 p.getCategory().getId(),
-                p.isActive());
+                p.isActive(),
+                p.getVendorId());
     }
 }

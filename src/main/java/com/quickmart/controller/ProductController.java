@@ -1,5 +1,6 @@
 package com.quickmart.controller;
 
+import com.quickmart.config.Actor;
 import com.quickmart.dto.PageResponse;
 import com.quickmart.dto.ProductRequest;
 import com.quickmart.dto.ProductResponse;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,20 +36,23 @@ public class ProductController {
         return catalogCache.getProduct(id);
     }
 
+    // Writes: VENDOR or ADMIN (SecurityConfig). WHICH products a vendor may touch is decided in
+    // ProductService from the token's vendor id: a vendor edits only its own products.
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse create(@Valid @RequestBody ProductRequest req) {
-        return productService.create(req);
+    public ProductResponse create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ProductRequest req) {
+        return productService.create(Actor.from(jwt), req);
     }
 
     @PutMapping("/{id}")
-    public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductRequest req) {
-        return productService.update(id, req);
+    public ProductResponse update(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+                                  @Valid @RequestBody ProductRequest req) {
+        return productService.update(Actor.from(jwt), id, req);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        productService.delete(id);
+    public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        productService.delete(Actor.from(jwt), id);
     }
 }

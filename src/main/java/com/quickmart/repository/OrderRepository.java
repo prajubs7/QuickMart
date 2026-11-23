@@ -19,4 +19,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     boolean existsByIdAndCustomerId(Long id, Long customerId);
 
+    // Same ownership filter, but loads items + products in one query for the order detail response.
+    // ("WithItems" is ignored by Spring Data; it only names the method apart from the one above,
+    // which PaymentService uses and which must NOT drag the items along.)
+    @EntityGraph(attributePaths = {"items", "items.product"})
+    Optional<Order> findWithItemsByIdAndCustomerId(Long id, Long customerId);
+
+    // ADMIN read: no owner filter. Only reachable through /api/admin/** (SecurityConfig).
+    @EntityGraph(attributePaths = {"items", "items.product"})
+    Optional<Order> findWithItemsById(Long id);
+
 }

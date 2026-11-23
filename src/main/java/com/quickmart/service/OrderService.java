@@ -87,4 +87,21 @@ public class OrderService {
                 .map(OrderResponse::from)
                 .toList();
     }
+
+    // One order, only if it is the caller's. Someone else's order -> 404, identical to a missing one,
+    // so order ids can't be probed (403 would confirm "exists, not yours").
+    @Transactional(readOnly = true)
+    public OrderResponse get(Long customerId, Long orderId) {
+        return orderRepository.findWithItemsByIdAndCustomerId(orderId, customerId)
+                .map(OrderResponse::from)
+                .orElseThrow(() -> new ResourceNotFoundException("Order " + orderId + " not found"));
+    }
+
+    // ADMIN only (/api/admin/**): no owner filter.
+    @Transactional(readOnly = true)
+    public OrderResponse getAny(Long orderId) {
+        return orderRepository.findWithItemsById(orderId)
+                .map(OrderResponse::from)
+                .orElseThrow(() -> new ResourceNotFoundException("Order " + orderId + " not found"));
+    }
 }

@@ -75,6 +75,17 @@ public class PaymentService {
                 .toList();
     }
 
+    // ADMIN only (/api/admin/**): payments of any order.
+    @Transactional(readOnly = true)
+    public List<PaymentResponse> forAnyOrder(Long orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new ResourceNotFoundException("Order " + orderId + " not found");
+        }
+        return paymentRepository.findByOrderIdOrderByCreatedAtAsc(orderId).stream()
+                .map(PaymentResponse::from)
+                .toList();
+    }
+
     // ADMIN only. Still unbounded: becomes a paginated export in the large-data step.
     @Transactional(readOnly = true)
     public List<PaymentResponse> getAllPayments() {
